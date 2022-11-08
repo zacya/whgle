@@ -1,0 +1,35 @@
+name: Fork
+
+on:
+  # schedule:
+  # - cron: '0 0 */1 * *' # every day
+  workflow_dispatch:
+  
+env:
+  SYNC_REPO: benbusby/whoogle-search
+  
+jobs:
+  fork:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout sync-repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.SYNC_REPO }}
+          path: './sync'
+      - name: copy from sync-repo
+        run: |
+          rm -rf ./sync/.gitignore
+          rm -rf ./sync/Dockerfile
+          cp -r  ./sync/* .
+          rm -rf ./sync
+      - name: Get last commit message
+        id: last-commit-message
+        run: |
+          echo "$(git log -1 --pretty=%s)"
+      - uses: EndBug/add-and-commit@v9
+        with:
+          message: ${{ steps.last-commit-message.outputs.msg }}
+          committer_name: GitHub Actions
+          committer_email: actions@github.com
